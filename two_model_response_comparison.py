@@ -39,10 +39,10 @@ for chunk in stream:
     response += chunk.choices[0].delta.content or '' if len(chunk.choices)>0 else ''
     response = response.replace("```","").replace("markdown", "")
     update_display(Markdown(response), display_id=display_handle.display_id)
+gpt_response=response
 
-
-# OLLAMA RESPONSE WITH STREAMING
-response = ollama.chat(
+# OLLAMA RESPONSE
+ollama_response = ollama.chat(
         model = MODEL_LLAMA,
         messages = [
             {"role":"system", "content":system_prompt},
@@ -51,4 +51,21 @@ response = ollama.chat(
     )
 
 print("""## OLLAMA RESPONSE""")
-display(Markdown(response['message']['content']))
+display(Markdown(ollama_response['message']['content']))
+
+
+# COMPARE BOTH MODELS USING SINGLE SHOT OLLAMA PROMPTING
+ollama_comparison_response = ollama.chat(
+        model = MODEL_LLAMA,
+        messages = [
+            {"role":"system", "content":"You are a Software Language Critic"},
+            {"role":"user", "content":"You are a Software languages critic.\
+            Your task is to compare response given before as GPT_RESPONSE : "\
+            +gpt_response+" and OLLAMA_RESPONSE : "+ollama_response['message']['content']+\
+            " and give the comparison results in following format : \
+            Response1 is better than Response2 by x% ."
+}
+        ]
+    )
+
+display(Markdown(ollama_comparison_response['message']['content']))
