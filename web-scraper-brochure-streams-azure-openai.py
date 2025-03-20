@@ -129,7 +129,7 @@ def stream_brochure(company_name, url):
     response = ""
     display_handle = display(Markdown(""), display_id=True)
     for chunk in stream:
-        response += response += chunk.choices[0].delta.content or '' if len(chunk.choices)>0 else ''
+        response += chunk.choices[0].delta.content or '' if len(chunk.choices)>0 else ''
         response = response.replace("```","").replace("markdown", "")
         update_display(Markdown(response), display_id=display_handle.display_id)
     
