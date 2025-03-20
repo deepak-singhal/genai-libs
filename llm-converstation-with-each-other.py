@@ -44,7 +44,6 @@ def call_ollama():
     for gpt, ollama_message in zip(gpt_messages, ollama_messages):
         messages.append({"role": "assistant", "content": ollama_message})
         messages.append({"role": "user", "content": gpt})
-    messages.append({"role": "user", "content": gpt_messages[-1]})
     response = ollama.chat(model=MODEL_LLAMA, messages=messages)
     return response['message']['content']
 
@@ -57,7 +56,7 @@ ollama_messages = ["Hi"]
 print(f"GPT:\n{gpt_messages[0]}\n")
 print(f"Ollama:\n{ollama_messages[0]}\n")
 
-for i in range(5):
+for i in range(3):
     gpt_next = call_gpt()
     print(f"GPT:\n{gpt_next}\n")
     gpt_messages.append(gpt_next)
