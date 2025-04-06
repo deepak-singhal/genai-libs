@@ -74,12 +74,12 @@ print(f"Result: {result:.12f}")
 print(f"Execution Time: {(end_time - start_time):.6f} seconds")
 """
 
-
-
 # exec(pi)
 # optimize_gpt(pi)
 # !clang++ -O3 -std=c++17 -march=armv8.3-a -o optimized optimized.cpp
 # !./optimized
+
+
 
 ################ TRY ANOTHER PYTHON PROGRAM CONVERSION
 python_hard = """# Be careful to support large number sizes
