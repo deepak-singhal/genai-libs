@@ -1,6 +1,7 @@
 # imports
 import os
 import glob
+import openai
 from dotenv import load_dotenv
 import gradio as gr
 
@@ -8,24 +9,22 @@ import gradio as gr
 from langchain.document_loaders import DirectoryLoader, TextLoader
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.schema import Document
+from langchain_openai import AzureChatOpenAI
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 import numpy as np
 from sklearn.manifold import TSNE
 import plotly.graph_objects as go
+from langchain.memory import ConversationBufferMemory
+from langchain.chains import ConversationalRetrievalChain
 
 # environment
 MODEL="gpt-4"
 db_name="vector_db"
-# load_dotenv(override=True)       <<<<--- TODO : Bug : Here Env Vars are not working with AzureOpenAIEmbeddings,
-# api_type=os.getenv('OPENAI_API_TYPE')
-# azure_endpoint=os.getenv('OPENAI_API_BASE')
-# api_version=os.getenv('OPENAI_API_VERSION')
-# api_key=os.getenv('OPENAI_API_KEY')
 
+###################### FETCH DATA FROM FOLDER -> DOCUMENTS -> CHUNKS #############################
 # Read in documents using LangChain's loaders
 # Take everything in all the sub-folders of our knowledgebase
-
 folders = glob.glob("knowledge-base/*")
 text_loader_kwargs = {'encoding': 'utf-8'}
 # If that doesn't work, some Windows users might need to uncomment the next line instead
@@ -52,7 +51,7 @@ chunks = text_splitter.split_documents(documents)
 # doc_types = set(chunk.metadata['doc_type'] for chunk in chunks)
 # print(f"Document types found: {', '.join(doc_types)}")
 
-
+###################### CREATE VECTORS DATA STORE WITH HUGGING FACE AS OPENAIEMBEDDING HAS ISSUE AND NEEDS A FIX IN CODE #############################
 # Put the chunks of data into a Vector Store that associates a Vector Embedding with each chunk
 
 # embeddings = OpenAIEmbeddings()
@@ -135,5 +134,47 @@ def create_3_d_plot(vectors):
     fig.show()
 
     
-create_2_d_plot(vectors)
-create_3_d_plot(vectors)
+# create_2_d_plot(vectors)
+# create_3_d_plot(vectors)
+
+
+####################### LANGCHAIN BRINGING IT ALL TOGETHER #############################
+
+# 1. create a new Chat with OpenAI
+load_dotenv(override=True)       #<<<<--- TODO : Bug : Here Env Vars are not working with AzureOpenAIEmbeddings,
+openai.api_type=os.getenv('OPENAI_API_TYPE')
+openai.azure_endpoint=os.getenv('OPENAI_API_BASE')
+openai.api_version=os.getenv('OPENAI_API_VERSION')
+openai.api_key=os.getenv('OPENAI_API_KEY')
+
+llm = AzureChatOpenAI(
+    azure_deployment=MODEL,  # or your deployment
+    api_version=openai.api_version,  # or your api version
+    azure_endpoint=openai.azure_endpoint,  # or your endpoint
+    temperature=0,
+    max_tokens=None,
+    timeout=None,
+    max_retries=2
+)
+
+# 2. set up the conversation memory for the chat
+memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
+
+# 3. the retriever is an abstraction over the VectorStore that will be used during RAG
+retriever = vectorstore.as_retriever()
+
+# 4. putting it together: set up the conversation chain with the GPT-4 LLM, the vector store and memory
+conversation_chain = ConversationalRetrievalChain.from_llm(llm=llm, retriever=retriever, memory=memory)
+
+
+def initiate_new_clean_chat():
+    # set up a new conversation memory for the chat
+    memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
+    # putting it together: set up the conversation chain with the GPT 4o-mini LLM, the vector store and memory
+    conversation_chain = ConversationalRetrievalChain.from_llm(llm=llm, retriever=retriever, memory=memory)
+
+def chat(message, history):    #Won't do anything with history param as LANGCHAIN maintains history in memory
+    result = conversation_chain.invoke({"question": message})
+    return result["answer"]
+
+gr.ChatInterface(chat).launch(inbrowser=True)
