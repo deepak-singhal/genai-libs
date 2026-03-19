@@ -1,7 +1,6 @@
 # Fine Tuning a Frontier Model : OPENAI GPT
 # Supervized Fine Tuning (SFT)
 
-
 import os
 import re
 import json
@@ -10,7 +9,6 @@ from huggingface_hub import login
 from openai import OpenAI
 from pricer.items  import Item
 from pricer.evaluator import evaluate
-
 
 LITE_MODE = True
 
@@ -27,12 +25,11 @@ dataset = f"{username}/items_lite" if LITE_MODE else f"{username}/items_full"
 train, val, test = Item.from_hub(dataset)
 print(f"Loaded {len(train):,} training items, {len(val):,} validation items, {len(test):,} test items")
 
-
-
 openai=OpenAI(base_url=BASE_URL, api_key=API_KEY)
 
 # OpenAI recommends fine-tuning with populations of 50-100 examples
 # But as our examples are very small, I'm suggesting we go with 100 examples (and 1 epoch)
+
 fine_tune_train = train[:100]
 fine_tune_validation = val[:50]
 
