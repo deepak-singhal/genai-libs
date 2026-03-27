@@ -48,3 +48,21 @@ def hello_europe() -> str:
     data = response.json()
     city, region, country = data["city"], data["region"], data["country"]
     return f"Hello from {city}, {region}, {country}!!"
+
+
+
+
+
+
+####### FILE-2
+
+# Agent -> Pricer-Service deployed on Modal (no code for this is required) -> Returns the response as it is
+
+import logging
+from agents.specialist_agent import SpecialistAgent
+
+root = logging.getLogger()
+root.setLevel(logging.INFO)
+
+agent = SpecialistAgent()
+agent.price("iPhone 13 pro max")
