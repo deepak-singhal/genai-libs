@@ -1,3 +1,5 @@
+## In this project, we are not using any agentic framework.
+
 # imports
 
 from dotenv import load_dotenv
